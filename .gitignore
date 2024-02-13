@@ -161,4 +161,4 @@ cython_debug/
 
 inputs/
 outputs/
-config.yml
+config.json
