@@ -233,6 +233,8 @@ class OneAtlasClient(Auth, Data, Search):
     def __init__(self, api_key=None):
         self._access_tokens = {}
         self.api_key = api_key
+        self.result_data = []
+        self.result_index = 0
 
     def _authenticate(self, client_id=None):
         response = requests.post(
@@ -288,6 +290,36 @@ class OneAtlasClient(Auth, Data, Search):
             plt.imshow(img)
             plt.axis("off")  # Optional: Turn off the axis labels
             plt.show()
+
+    def extract_results(self, results):
+        self.result_data = [
+            {
+                "image_id": f["properties"]["id"],
+                "quicklook_link": f["_links"]["quicklook"]["href"],
+                "acquisition_date": f["properties"]["acquisitionDate"],
+                "constellation": f["properties"]["constellation"],
+                "cloud_cover": f["properties"]["cloudCover"],
+            }
+            for f in results["features"]
+        ]
+        self.result_index = 0
+
+    def next_result(self):
+        if not self.result_data:
+            print(
+                "No results to display. Please run a search and extract results first."
+            )
+            return
+        # Print certain properties of the current item
+        item = self.result_data[self.result_index]
+        print(f"Image ID: {item['image_id']}")
+        print(f"Acquisition Date: {item['acquisition_date']}")
+        print(f"Constellation: {item['constellation']}")
+        print(f"Cloud Cover: {item['cloud_cover']}%")
+        self.plot_image_from_url(item["quicklook_link"])
+
+        # Increment the index and wrap around if at the end of the list
+        self.result_index = (self.result_index + 1) % len(self.result_data)
 
 
 if __name__ == "__main__":
