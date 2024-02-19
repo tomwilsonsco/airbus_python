@@ -235,6 +235,7 @@ class OneAtlasClient(Auth, Data, Search):
         self.api_key = api_key
         self.result_data = []
         self.result_index = 0
+        self.current_image = ""
 
     def _authenticate(self, client_id=None):
         response = requests.post(
@@ -304,7 +305,7 @@ class OneAtlasClient(Auth, Data, Search):
         ]
         self.result_index = 0
 
-    def next_result(self):
+    def show_result(self):
         if not self.result_data:
             print(
                 "No results to display. Please run a search and extract results first."
@@ -312,10 +313,12 @@ class OneAtlasClient(Auth, Data, Search):
             return
         # Print certain properties of the current item
         item = self.result_data[self.result_index]
+        print(f"result {self.result_index + 1} of {len(self.result_data)}")
         print(f"Image ID: {item['image_id']}")
         print(f"Acquisition Date: {item['acquisition_date']}")
         print(f"Constellation: {item['constellation']}")
         print(f"Cloud Cover: {item['cloud_cover']}%")
+        self.current_image = item["image_id"]
         self.plot_image_from_url(item["quicklook_link"])
 
         # Increment the index and wrap around if at the end of the list
