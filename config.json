@@ -1,3 +1,4 @@
 {
-"api_key": "your api key here"
+"api_key": "put your key here",
+"output_dir": "outputs"
 }
