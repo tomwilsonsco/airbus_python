@@ -52,6 +52,7 @@ class Data:
                 'Invalid order provided; the entire order is required, { "_links": {...}, "id": ...}'
             )
         self.download_url_to_file(download_link, download_path)
+        print(f"Downloaded to {download_path}")
 
     def get_account_information(self):
         response = requests.get(
@@ -149,12 +150,15 @@ class Data:
         response.raise_for_status()
         return response.json()
 
-    def list_orders(self, status=None, kind=None, page=1, items_per_page=10):
+    def list_orders(
+        self, status=None, kind=None, customerRef=None, page=1, items_per_page=10
+    ):
         response = requests.get(
             url=f"{OneAtlasClient.DATA_URL}/api/v1/orders",
             params={
                 "status": status,
                 "kind": kind,
+                "customerRef": customerRef,
                 "page": page,
                 "itemsPerPage": items_per_page,
             },
