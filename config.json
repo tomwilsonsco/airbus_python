@@ -1,5 +1,5 @@
 {
 "api_key": "put your key here",
-"output_dir": "outputs"
+"output_dir": "outputs",
 "input_gdb": "inputs/my_gdb.gdb"
 }
