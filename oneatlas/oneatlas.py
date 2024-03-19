@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 import requests
+import time
 
 from io import BytesIO
 import matplotlib.pyplot as plt
@@ -153,19 +154,27 @@ class Data:
     def list_orders(
         self, status=None, kind=None, customerRef=None, page=1, items_per_page=10
     ):
-        response = requests.get(
-            url=f"{OneAtlasClient.DATA_URL}/api/v1/orders",
-            params={
-                "status": status,
-                "kind": kind,
-                "customerRef": customerRef,
-                "page": page,
-                "itemsPerPage": items_per_page,
-            },
-            headers=self._access_token(OneAtlasClient.CLIENT_ID_IDP),
-        )
-        response.raise_for_status()
-        return response.json()
+        attempts = 0
+        while attempts < 5:
+            try:
+                response = requests.get(
+                    url=f"{OneAtlasClient.DATA_URL}/api/v1/orders",
+                    params={
+                        "status": status,
+                        "kind": kind,
+                        "customerRef": customerRef,
+                        "page": page,
+                        "itemsPerPage": items_per_page,
+                    },
+                    headers=self._access_token(OneAtlasClient.CLIENT_ID_IDP),
+                )
+                response.raise_for_status()
+                return response.json()  # Success, return the JSON response
+            except requests.HTTPError:
+                attempts += 1  # Increment the attempt counter
+                if attempts == 5:
+                    raise  # Re-raise the last exception after max attempts
+                time.sleep(5)
 
     def list_subscription_payments(self, subscription_id, page=1, items_per_page=10):
         response = requests.get(
@@ -199,13 +208,23 @@ class Data:
 class Search:
 
     def search(self, body):
-        response = requests.post(
-            url=f"{OneAtlasClient.SEARCH_URL}/api/v2/opensearch",
-            json=body,
-            headers=self._access_token(OneAtlasClient.CLIENT_ID_IDP),
-        )
-        response.raise_for_status()
-        return response.json()
+        attempts = 0
+        while attempts < 5:
+            try:
+                response = requests.post(
+                    url=f"{OneAtlasClient.SEARCH_URL}/api/v2/opensearch",
+                    json=body,
+                    headers=self._access_token(OneAtlasClient.CLIENT_ID_IDP),
+                )
+                response.raise_for_status()
+                return (
+                    response.json()
+                )  # If request is successful, return the JSON response
+            except requests.HTTPError:
+                attempts += 1  # Increment attempts counter
+                if attempts == 5:
+                    raise  # Re-raise the last exception after max attempts are reached
+                time.sleep(5)  # Wait for 5 seconds before retrying
 
     def download_quicklook_to_file(self, scene, download_path):
         try:
@@ -327,6 +346,21 @@ class OneAtlasClient(Auth, Data, Search):
 
         # Increment the index and wrap around if at the end of the list
         self.result_index = (self.result_index + 1) % len(self.result_data)
+
+    def _make_request_with_retries(self, method, url, **kwargs):
+        attempts = 0
+        while attempts < 5:
+            try:
+                response = requests.request(method, url, **kwargs)
+                response.raise_for_status()
+                return (
+                    response.json()
+                )  # If request is successful, return the JSON response
+            except requests.HTTPError:
+                attempts += 1  # Increment attempts counter
+                if attempts == 5:
+                    raise  # Re-raise the last exception after max attempts are reached
+                time.sleep(5)  # Wait for 5 seconds before retrying
 
 
 if __name__ == "__main__":
